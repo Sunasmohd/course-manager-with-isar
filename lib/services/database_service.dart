@@ -26,6 +26,20 @@ class DatabaseService {
     await isar.writeTxn(() => isar.courses.put(course));
   }
 
+  void addStudents(Student students) async {
+    await isar.writeTxn(() async {
+      await isar.students.put(students);
+      await students.courses.save();
+    });
+  }
+
+  void addTeachers(Teacher teachers) async {
+    await isar.writeTxn(() async {
+      await isar.teachers.put(teachers);
+      await teachers.course.save();
+    });
+  }
+
   void updateCourses(Course newCourse) async {
     Course? oldCourse =
         await isar.courses.filter().idEqualTo(newCourse.id).findFirst();
@@ -90,21 +104,7 @@ class DatabaseService {
   Future<void> deleteTeachers(int id) async {
     await isar.writeTxn(() => isar.teachers.delete(id));
   }
-
-  void addStudents(Student students) async {
-    await isar.writeTxn(() async {
-      await isar.students.put(students);
-      await students.courses.save();
-    });
-  }
-
-  void addTeachers(Teacher teachers) async {
-    await isar.writeTxn(() async {
-      await isar.teachers.put(teachers);
-      await teachers.course.save();
-    });
-  }
-
+  
   Future<List<Course>> getAllCourses() async {
     return await isar.courses.where().findAll();
   }
@@ -127,19 +127,5 @@ class DatabaseService {
 
   Future<void> cleanDb() async {
     await isar.writeTxn(() => isar.clear());
-  }
-
-  Future<List<Student>> getStudentsFor(Course course) async {
-    return await isar.students
-        .filter()
-        .courses((q) => q.idEqualTo(course.id))
-        .findAll();
-  }
-
-  Future<Teacher?> getTeacherFor(Course course) async {
-    return await isar.teachers
-        .filter()
-        .course((q) => q.idEqualTo(course.id))
-        .findFirst();
   }
 }

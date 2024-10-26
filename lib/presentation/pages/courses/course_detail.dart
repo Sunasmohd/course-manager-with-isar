@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:course_manage_with_isar/models/course.dart';
 import 'package:course_manage_with_isar/presentation/widgets/row_container.dart';
-import 'package:course_manage_with_isar/services/database_service.dart';
 
 class CourseDetail extends StatelessWidget {
   final Course course;
@@ -9,7 +8,6 @@ class CourseDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final databaseService = DatabaseService();
     return Scaffold(
       appBar: AppBar(),
       body: Padding(
@@ -31,34 +29,16 @@ class CourseDetail extends StatelessWidget {
             const SizedBox(
               height: 10,
             ),
-            FutureBuilder(
-                future: databaseService.getTeacherFor(course),
-                builder: (index, snapshot) {
-                  if (snapshot.hasData) {
-                    return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: RowContainer(value: snapshot.data!));
-                  }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator.adaptive(),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Text('Error!! ${snapshot.error}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w400, color: Colors.red));
-                  }
-                  if (snapshot.data == null) {
-                    return const Text(
-                        'No tutors are available for this course.',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w400, color: Colors.red));
-                  }
-                  return const Text('Something went wrong!!',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w400, color: Colors.red));
-                }),
+            course.teacher.value == null
+                ? const Text(
+                    'No tutors are available for this course',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w400, color: Colors.red),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: RowContainer(value: course.teacher.value),
+                  ),
             const SizedBox(
               height: 50,
             ),
@@ -69,38 +49,21 @@ class CourseDetail extends StatelessWidget {
             const SizedBox(
               height: 10,
             ),
-            FutureBuilder(
-                future: databaseService.getStudentsFor(course),
-                builder: (index, snapshot) {
-                  if (snapshot.hasData) {
-                    if (snapshot.data!.isEmpty) {
-                      return const Text(
-                          'No students are registered for this course.',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w400, color: Colors.red));
-                    }
-                    return Expanded(
-                      child: ListView.builder(
-                          itemCount: snapshot.data?.length,
-                          itemBuilder: (context, index) {
-                            final student = snapshot.data![index];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              child: RowContainer(value: student),
-                            );
-                          }),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Text('Error!! ${snapshot.error}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w400, color: Colors.red));
-                  }
-                  return const Text(
-                      'No students are registered for this course.',
+            Expanded(
+              child: course.students.toList().isEmpty
+                  ? const Text('No students are registered for this course.',
                       style: TextStyle(
-                          fontWeight: FontWeight.w400, color: Colors.red));
-                }),
+                          fontWeight: FontWeight.w400, color: Colors.red))
+                  : ListView.builder(
+                      itemCount: course.students.toList().length,
+                      itemBuilder: (context, index) {
+                        final student = course.students.toList()[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: RowContainer(value: student),
+                        );
+                      }),
+            )
           ],
         ),
       ),
